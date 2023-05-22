@@ -1,5 +1,7 @@
-import { db } from '@/lib/db';
+import bcrypt from 'bcrypt';
 import { NextResponse } from 'next/server';
+
+import { db } from '@/lib/db';
 
 export async function POST(request: Request) {
   const { username, password } = await request.json();
@@ -10,6 +12,10 @@ export async function POST(request: Request) {
       message: 'Missing required data',
     });
 
+  const salt = await bcrypt.genSalt(Number(process.env.SALT));
+
+  const hash = await bcrypt.hash(password, salt);
+
   const { rows } = await db.query(
     `
     INSERT INTO users (username, password)
@@ -17,7 +23,7 @@ export async function POST(request: Request) {
     ON CONFLICT (username) DO NOTHING
     RETURNING *;
     `,
-    [username, password]
+    [username, hash]
   );
 
   return NextResponse.json({ success: true, user: rows });
