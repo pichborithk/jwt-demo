@@ -1,4 +1,5 @@
 import bcrypt from 'bcrypt';
+import jwt from 'jsonwebtoken';
 import { NextResponse } from 'next/server';
 
 import { db } from '@/lib/db';
@@ -32,5 +33,36 @@ export async function POST(request: Request) {
     });
   }
 
-  return NextResponse.json({ success: true, user });
+  const accessToken = jwt.sign(
+    { id: user.id, username: user.username },
+    process.env.ACCESS_TOKEN_SECRET!,
+    { expiresIn: '1m' }
+  );
+
+  const refreshToken = jwt.sign(
+    { id: user.id, username: user.username },
+    process.env.REFRESH_TOKEN_SECRET!,
+    { expiresIn: '1d' }
+  );
+
+  await db.query(
+    `
+    UPDATE users
+    SET "refreshToken"=$2
+    WHERE id=$1
+    `,
+    [user.id, refreshToken]
+  );
+
+  const response = NextResponse.json({
+    success: true,
+    user: { username: user.username, token: accessToken },
+  });
+
+  response.cookies.set('jwt', refreshToken, {
+    httpOnly: true,
+    maxAge: 5 * 60,
+  });
+
+  return response;
 }
