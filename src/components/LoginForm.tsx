@@ -1,13 +1,29 @@
 'use client';
 
-import { useState } from 'react';
+import { FormEvent, useState } from 'react';
 
 const LoginForm = () => {
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
 
+  async function handleLogin(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+
+    const res = await fetch('http://localhost:3000/api/login', {
+      method: 'POST',
+      headers: { 'Content-type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    });
+
+    const result = await res.json();
+    console.log(result);
+  }
+
   return (
-    <form className='relative flex w-1/2 flex-col items-center justify-evenly gap-8 rounded-2xl border border-solid border-red-100  px-20 py-12 text-xl shadow-md dark:border-slate-900 dark:shadow-slate-900'>
+    <form
+      className='relative flex w-1/2 flex-col items-center justify-evenly gap-8 rounded-2xl border border-solid border-red-100  px-20 py-12 text-xl shadow-md dark:border-slate-900 dark:shadow-slate-900'
+      onSubmit={handleLogin}
+    >
       <h1 className='text-4xl font-bold'>Sign In</h1>
       <fieldset className='group relative flex w-full flex-col'>
         <label
@@ -15,7 +31,7 @@ const LoginForm = () => {
           className={`pointer-events-none absolute left-4 top-2 border-zinc-800 bg-zinc-200 px-2 group-focus-within:-translate-x-1 group-focus-within:-translate-y-5 group-focus-within:text-base dark:bg-inherit dark:text-white dark:group-focus-within:bg-black
           ${username && '-translate-x-1 -translate-y-5 text-base'}`}
         >
-          Title
+          Username
         </label>
         <input
           name='username'
@@ -33,12 +49,12 @@ const LoginForm = () => {
           className={`pointer-events-none absolute left-4 top-2 border-zinc-800 bg-zinc-200 px-2 group-focus-within:-translate-x-1 group-focus-within:-translate-y-5 group-focus-within:text-base dark:bg-inherit dark:text-white dark:group-focus-within:bg-black
           ${password && '-translate-x-1 -translate-y-5 text-base'}`}
         >
-          Description
+          Password
         </label>
         <input
           name='password'
           id='password'
-          type='text'
+          type='password'
           required
           value={password}
           onChange={event => setPassword(event.target.value)}
